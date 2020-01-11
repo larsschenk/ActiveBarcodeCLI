@@ -1,0 +1,458 @@
+#! /usr/bin/env bash
+#
+# AciveBarcodeCLI
+#
+# by www.activebarcode.com, www.activebarcode.de
+# email: info@activebarcode.de
+# Author: Lars Schenk, 2020
+#
+# Synopsis: 
+# Create image files of barcodes by using the ActiveBarcode REST API.
+# https://www.activebarcode.com/rest/
+# 
+#
+# This program (AciveBarcodeCLI) is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program (AciveBarcodeCLI) is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You can download a copy of the GNU General Public License at
+# http://www.gnu.org/licenses/gpl.txt
+#
+# Depencencies:
+# wget
+
+
+VERSION='0.0.1'
+
+
+help() {
+    echo -e "ActiveBarcodeCLI: missing FILENAME
+Usage: ActiveBarcodeCLI [OPTION]... [FILENAME]...
+
+Try \`ActiveBarcodeCLI --help' for more options.
+"
+}
+
+
+helpVerbose() {
+  echo -e "ActiveBarcodeCLI $VERSION, a non-interactive barcode image creator.
+
+Usage: ActiveBarcodeCLI [OPTION]... [FILENAME]...
+
+[FILENAME] must use .png or .jpg to determine the image file format.
+
+Mandatory arguments to long options are mandatory for short options too.
+
+Startup:
+  -V,  --version                   display the version of ActiveBarcodeCLI and exit
+  -H,  --help                      this help
+       --types                     list of supported barcode types
+
+Access key:
+  -A,  --access=YOUR-KEY-HERE      Obtain your access key here:
+                                   https://www.activebarcode.com/rest/
+
+Barcode properties:
+  -t,  --text=STRING               text to be encoded 
+                                   --text=123456789012
+                                   --text='Hello World!'
+  -n,  --type=NUMBER               barcode type number
+                                   --type=1 for EAN13
+                                   --type=113 for QR Code
+                                   --types for a complete list
+  -c,  --code=STRING               barcode type name
+                                   --code=EAN13
+                                   --code=QRCode
+                                   --codes for a complete list
+  -w,  --width=NUMBER              width in pixels
+  -h,  --height=NUMBER             height in pixels
+  -a,  --alignment=NUMBER          0=left, 1=center, 2=right
+  -W,  --borderwidth=NUMBER        borderwidth in pixels
+  -H,  --borderheight=NUMBER       borderheight in pixels
+  -o,  --notchheight=NUMBER        the notch height in %
+  -s,  --showtext=BOOL             off=no textline under the code
+  -f,  --forecolor=RGB             sets the foreground color
+                                   hexadecimal RGB as RRGGBB
+                                   --foreground=000000 (black)
+  -b,  --backcolor=RGB             sets the background color
+                                   --backcolor=FFFFFF (white)
+  -r,  --rotate=NUMBER             rotates the barcode in degree
+                                   supported  values: 0, 90, 270, 180
+
+Within --text you can use control characters within pointed brackets:
+<SOH>, <STX>, <ETX>, <EOT>, <ENQ>, <ACK>, <BEL>, <BS>, <TAB>, <LF>, <VT>, <FF>, 
+<CR>, <SO>, <SI>, <DLE>, <DC1>, <DC2>, <DC3>, <DC4>, <NAK>, <SYN>, <ETB>, <CAN>, 
+<EM>, <SUB>, <ESC>, <FS>, <GS>, <RS>, <US> and <DEL>
+
+Barcode clear text font properties:
+  --fontname=TEXT      --fontname=Arial               font of the text line
+                       --fontname='Times New Roman'
+  --fontsize=NUMBER    --fontsize=8                   font size
+  --fontbold=BOOL      --fontbold=on                  on/off
+  --fontitalic=BOOL                                   on/off
+  --fontunderline=BOOL                                on/off
+  --fontstrikeout=BOOL                                on/off
+
+Examples of usage:
+ActiveBarcodeCLI barcode.png
+ActiveBarcodeCLI --text=192837465012 --code=ean13 --width=400 --height=200 ean.png 
+ActiveBarcodeCLI --text='Hello World!' --type=14 --width=500 --height=100 code128.jpg
+
+ActiveBarcodeCLI $VERSION is open source and can be redistribute and/or modify under the terms of the GNU GPL.
+"
+}
+
+
+helpTypes() {
+  echo -e "Complete list of barcode types:
+
+ISBN-10:                      --type=0   or --code=CODEISBN 
+EAN 13:                       --type=1   or --code=CODEEAN13 
+EAN 8:                        --type=2   or --code=CODEEAN8 
+EAN 5:                        --type=3   or --code=CODEEAN5 
+EAN 2:                        --type=4   or --code=CODEEAN2 
+UPC A:                        --type=5   or --code=CODEUPCA 
+Code 39:                      --type=6   or --code=CODE39 
+Code 25 Interleaved:          --type=7   or --code=CODE25I 
+Codabar:                      --type=8   or --code=CODABAR 
+Code 25 Industrial:           --type=9   or --code=CODE25 
+Code 39 Extended:             --type=10  or --code=CODE39E 
+Code 128A:                    --type=11  or --code=CODECODE128A 
+Code 128B:                    --type=12  or --code=CODECODE128B 
+Code 128C:                    --type=13  or --code=CODECODE128C 
+Code 128:                     --type=14  or --code=CODECODE128 
+EAN/UCC 128:                  --type=15  or --code=CODEEAN128 
+EAN 99:                       --type=16  or --code=CODEEAN99 
+UPC E:                        --type=17  or --code=CODEUPCE 
+PostNet:                      --type=18  or --code=CODEPOSTNET 
+Royal Mail:                   --type=19  or --code=CODEROYALMAIL 
+MSI:                          --type=20  or --code=CODEMSI 
+Code 93:                      --type=21  or --code=CODE93 
+Code 93 Extended:             --type=22  or --code=CODE93E 
+PZN7:                         --type=23  or --code=CODEPZN8 
+Identcode:                    --type=24  or --code=CODEIDENTCODE 
+Leitcode:                     --type=25  or --code=CODELEITCODE 
+Code 39 Checksum:             --type=26  or --code=CODE39CHECKSUM 
+Code 39 Extended Checksum:    --type=27  or --code=CODE39ECHECKSUM 
+EAN/UCC 128 AI:               --type=28  or --code=CODEEAN128AI 
+EAN 14:                       --type=29  or --code=CODEEAN14 
+ITF-14:                       --type=30  or --code=CODEITF14 
+EAN-18/NVE:                   --type=31  or --code=CODEEAN18 
+SSCC-18:                      --type=32  or --code=CODESSCC18 
+Codabar Checksum:             --type=33  or --code=CODABARCHECKSUM 
+Code 25 Interleaved Checksum: --type=34  or --code=CODE25ICHECKSUM 
+Code 25 Industrial Checksum:  --type=35  or --code=CODE25CHECKSUM 
+PDF417:                       --type=36  or --code=CODEPDF417 
+DataMatrix:                   --type=37  or --code=CODEDATAMATRIX 
+ISBN-13:                      --type=38  or --code=CODEISBN13 
+ISBN-13 Dual:                 --type=39  or --code=CODEISBN13DUAL 
+ISSN:                         --type=40  or --code=CODEISSN 
+ISMN:                         --type=41  or --code=CODEISMN 
+DataMatrix Square:            --type=42  or --code=CODEDATAMATRIXSQUARE 
+DataMatrix Rectangular:       --type=43  or --code=CODEDATAMATRIXRECTANGULAR 
+DataMatrix 10x10:             --type=44  or --code=CODEDATAMATRIX10X10 
+DataMatrix 12x12:             --type=45  or --code=CODEDATAMATRIX12X12 
+DataMatrix 8x18:              --type=46  or --code=CODEDATAMATRIX8X18 
+DataMatrix 14x14:             --type=47  or --code=CODEDATAMATRIX14X14 
+DataMatrix 8x32:              --type=48  or --code=CODEDATAMATRIX8X32 
+DataMatrix 16x16:             --type=49  or --code=CODEDATAMATRIX16X16 
+DataMatrix 12x26:             --type=50  or --code=CODEDATAMATRIX12X26 
+DataMatrix 18x18:             --type=51  or --code=CODEDATAMATRIX18X18 
+DataMatrix 20x20:             --type=52  or --code=CODEDATAMATRIX20X20 
+DataMatrix 12x36:             --type=53  or --code=CODEDATAMATRIX12X36 
+DataMatrix 22x22:             --type=54  or --code=CODEDATAMATRIX22X22 
+DataMatrix 16x36:             --type=55  or --code=CODEDATAMATRIX16X36 
+DataMatrix 24x24:             --type=56  or --code=CODEDATAMATRIX24X24 
+DataMatrix 26x26:             --type=57  or --code=CODEDATAMATRIX26X26 
+DataMatrix 16x48:             --type=58  or --code=CODEDATAMATRIX16X48 
+DataMatrix 32x32:             --type=59  or --code=CODEDATAMATRIX32X32 
+DataMatrix 36x36:             --type=60  or --code=CODEDATAMATRIX36X36 
+DataMatrix 40x40:             --type=61  or --code=CODEDATAMATRIX40X40 
+DataMatrix 44x44:             --type=62  or --code=CODEDATAMATRIX44X44 
+DataMatrix 48x48:             --type=63  or --code=CODEDATAMATRIX48X48 
+DataMatrix 52x52:             --type=64  or --code=CODEDATAMATRIX52X52 
+DataMatrix 64x64:             --type=65  or --code=CODEDATAMATRIX64X64 
+DataMatrix 72x72:             --type=66  or --code=CODEDATAMATRIX72X72 
+DataMatrix 80x80:             --type=67  or --code=CODEDATAMATRIX80X80 
+DataMatrix 88x88:             --type=68  or --code=CODEDATAMATRIX88X88 
+DataMatrix 96x96:             --type=69  or --code=CODEDATAMATRIX96X96 
+DataMatrix 104x104:           --type=70  or --code=CODEDATAMATRIX104X104 
+DataMatrix 120x120:           --type=71  or --code=CODEDATAMATRIX120X120 
+DataMatrix 132x132:           --type=72  or --code=CODEDATAMATRIX132X132 
+DataMatrix 144x144:           --type=73  or --code=CODEDATAMATRIX144X144 
+GS1-Data Matrix:              --type=74  or --code=CODEGS1DATAMATRIX 
+GS1-Data Matrix Square:       --type=75  or --code=CODEGS1DATAMATRIXSQUARE 
+GS1-Data Matrix Rectangular:  --type=76  or --code=CODEGS1DATAMATRIXRECTANGULAR 
+GS1-Data Matrix 10x10:        --type=77  or --code=CODEGS1DATAMATRIX10X10 
+GS1-Data Matrix 12x12:        --type=78  or --code=CODEGS1DATAMATRIX12X12 
+GS1-Data Matrix 8x18:         --type=79  or --code=CODEGS1DATAMATRIX8X18 
+GS1-Data Matrix 14x14:        --type=80  or --code=CODEGS1DATAMATRIX14X14 
+GS1-Data Matrix 8x32:         --type=81  or --code=CODEGS1DATAMATRIX8X32 
+GS1-Data Matrix 16x16:        --type=82  or --code=CODEGS1DATAMATRIX16X16 
+GS1-Data Matrix 12x26:        --type=83  or --code=CODEGS1DATAMATRIX12X26 
+GS1-Data Matrix 18x18:        --type=84  or --code=CODEGS1DATAMATRIX18X18 
+GS1-Data Matrix 20x20:        --type=85  or --code=CODEGS1DATAMATRIX20X20 
+GS1-Data Matrix 12x36:        --type=86  or --code=CODEGS1DATAMATRIX12X36 
+GS1-Data Matrix 22x22:        --type=87  or --code=CODEGS1DATAMATRIX22X22 
+GS1-Data Matrix 16x36:        --type=88  or --code=CODEGS1DATAMATRIX16X36 
+GS1-Data Matrix 24x24:        --type=89  or --code=CODEGS1DATAMATRIX24X24 
+GS1-Data Matrix 26x26:        --type=90  or --code=CODEGS1DATAMATRIX26X26 
+GS1-Data Matrix 16x48:        --type=91  or --code=CODEGS1DATAMATRIX16X48 
+GS1-Data Matrix 32x32:        --type=92  or --code=CODEGS1DATAMATRIX32X32 
+GS1-Data Matrix 36x36:        --type=93  or --code=CODEGS1DATAMATRIX36X36 
+GS1-Data Matrix 40x40:        --type=94  or --code=CODEGS1DATAMATRIX40X40 
+GS1-Data Matrix 44x44:        --type=95  or --code=CODEGS1DATAMATRIX44X44 
+GS1-Data Matrix 48x48:        --type=96  or --code=CODEGS1DATAMATRIX48X48 
+GS1-Data Matrix 52x52:        --type=97  or --code=CODEGS1DATAMATRIX52X52 
+GS1-Data Matrix 64x64:        --type=98  or --code=CODEGS1DATAMATRIX64X64 
+None:                         --type=99  or --code=CODENONE 
+GS1-Data Matrix 72x72:        --type=100 or --code=CODEGS1DATAMATRIX72X72 
+GS1-Data Matrix 80x80:        --type=101 or --code=CODEGS1DATAMATRIX80X80 
+GS1-Data Matrix 88x88:        --type=102 or --code=CODEGS1DATAMATRIX88X88 
+GS1-Data Matrix 96x96:        --type=103 or --code=CODEGS1DATAMATRIX96X96 
+GS1-Data Matrix 104x104:      --type=104 or --code=CODEGS1DATAMATRIX104X104 
+GS1-Data Matrix 120x120:      --type=105 or --code=CODEGS1DATAMATRIX120X120 
+GS1-Data Matrix 132x132:      --type=106 or --code=CODEGS1DATAMATRIX132X132 
+GS1-Data Matrix 144x144:      --type=107 or --code=CODEGS1DATAMATRIX144X144 
+GS1-128:                      --type=108 or --code=CODEGS1128 
+GTIN-8:                       --type=109 or --code=CODEGTIN8 
+GTIN-12:                      --type=110 or --code=CODEGTIN12 
+GTIN-13:                      --type=111 or --code=CODEGTIN13 
+GTIN-14:                      --type=112 or --code=CODEGTIN14 
+QR Code:                      --type=113 or --code=CODEQRCODE 
+QR Code ECC Level L:          --type=114 or --code=CODEQRCODEECCLEVELL 
+QR Code ECC Level M:          --type=115 or --code=CODEQRCODEECCLEVELM 
+QR Code ECC Level Q:          --type=116 or --code=CODEQRCODEECCLEVELQ 
+QR Code ECC Level H:          --type=117 or --code=CODEQRCODEECCLEVELH 
+QR Code 21x21:                --type=118 or --code=CODEQRCODE21X21 
+QR Code 25x25:                --type=119 or --code=CODEQRCODE25X25 
+QR Code 29x29:                --type=120 or --code=CODEQRCODE29X29 
+QR Code 33x33:                --type=121 or --code=CODEQRCODE33X33 
+QR Code 37x37:                --type=122 or --code=CODEQRCODE37X37 
+QR Code 41x41:                --type=123 or --code=CODEQRCODE41X41 
+QR Code 45x45:                --type=124 or --code=CODEQRCODE45X45 
+QR Code 49x49:                --type=125 or --code=CODEQRCODE49X49 
+QR Code 53x53:                --type=126 or --code=CODEQRCODE53X53 
+QR Code 57x57:                --type=127 or --code=CODEQRCODE57X57 
+QR Code 61x61:                --type=128 or --code=CODEQRCODE61X61 
+QR Code 65x65:                --type=129 or --code=CODEQRCODE65X65 
+QR Code 69x69:                --type=130 or --code=CODEQRCODE69X69 
+QR Code 73x73:                --type=131 or --code=CODEQRCODE73X73 
+QR Code 77x77:                --type=132 or --code=CODEQRCODE77X77 
+QR Code 81x81:                --type=133 or --code=CODEQRCODE81X81 
+QR Code 85x85:                --type=134 or --code=CODEQRCODE85X85 
+QR Code 89x89:                --type=135 or --code=CODEQRCODE89X89 
+QR Code 93x93:                --type=136 or --code=CODEQRCODE93X93 
+QR Code 97x97:                --type=137 or --code=CODEQRCODE97X97 
+QR Code 101x101:              --type=138 or --code=CODEQRCODE101X101 
+QR Code 105x105:              --type=139 or --code=CODEQRCODE105X105 
+QR Code 109x109:              --type=140 or --code=CODEQRCODE109X109 
+QR Code 113x113:              --type=141 or --code=CODEQRCODE113X113 
+QR Code 117x117:              --type=142 or --code=CODEQRCODE117X117 
+QR Code 121x121:              --type=143 or --code=CODEQRCODE121X121 
+QR Code 125x125:              --type=144 or --code=CODEQRCODE125X125 
+QR Code 129x129:              --type=145 or --code=CODEQRCODE129X129 
+QR Code 133x133:              --type=146 or --code=CODEQRCODE133X133 
+QR Code 137x137:              --type=147 or --code=CODEQRCODE137X137 
+QR Code 141x141:              --type=148 or --code=CODEQRCODE141X141 
+QR Code 145x145:              --type=149 or --code=CODEQRCODE145X145 
+QR Code 149x149:              --type=150 or --code=CODEQRCODE149X149 
+QR Code 153x153:              --type=151 or --code=CODEQRCODE153X153 
+QR Code 157x157:              --type=152 or --code=CODEQRCODE157X157 
+QR Code 161x161:              --type=153 or --code=CODEQRCODE161X161 
+QR Code 165x165:              --type=154 or --code=CODEQRCODE165X165 
+QR Code 169x169:              --type=155 or --code=CODEQRCODE169X169 
+QR Code 173x173:              --type=156 or --code=CODEQRCODE173X173 
+QR Code 177x177:              --type=157 or --code=CODEQRCODE177X177 
+PZN8:                         --type=158 or --code=CODEPZN8 
+"
+}
+
+rawurlencode() {
+  local string="${1}"
+  local strlen=${#string}
+  local encoded=""
+  local pos c o
+
+  for (( pos=0 ; pos<strlen ; pos++ )); do
+     c=${string:$pos:1}
+     case "$c" in
+        [-_.~a-zA-Z0-9] ) o="${c}" ;;
+        * )               printf -v o '%%%02x' "'$c"
+     esac
+     encoded+="${o}"
+  done
+  echo "${encoded}"    # You can either set a return variable (FASTER) 
+  #REPLY="${encoded}"   #+or echo the result (EASIER)... or both... :p
+}
+#easier:  echo http://url/q?=$( rawurlencode "$args" )
+#faster:  rawurlencode "$args"; echo http://url/q?${REPLY}
+
+
+### main ###
+
+
+# set defaults
+access=YOUR-KEY-HERE
+width=400
+height=150
+borderwidth=0
+borderheight=0
+text=
+typeno=
+code=
+alignment=1
+forecolor=000000
+backcolor=ffffff
+rotate=
+fontname=
+fontsize=
+fontbold=
+fontitalic=
+fontunderline=
+fontstrikeout=
+filename=
+
+for i in "$@"
+do
+    case $i in
+        -A=*|--access=*)
+        access="${i#*=}"
+        shift # past argument=value
+        ;;
+        -t=*|--text=*)
+        text="${i#*=}"
+        shift # past argument=value
+        ;;
+        -n=*|--type=*)
+        typeno="${i#*=}"
+        shift # past argument=value
+        ;;
+        -c=*|--code=*)
+        code="${i#*=}"
+        shift # past argument=value
+        ;;
+        -w=*|--width=*)
+        width="${i#*=}"
+        shift # past argument=value
+        ;;
+        -h=*|--height=*)
+        height="${i#*=}"
+        shift # past argument=value
+        ;;
+        -a=*|--alignment=*)
+        alignment="${i#*=}"
+        shift # past argument=value
+        ;;
+        -W=*|--borderwidth=*)
+        borderwidth="${i#*=}"
+        shift # past argument=value
+        ;;
+        -H=*|--borderheight=*)
+        borderheight="${i#*=}"
+        shift # past argument=value
+        ;;
+        -o=*|--notchheight=*)
+        notchheight="${i#*=}"
+        shift # past argument=value
+        ;;
+        -s=*|--showtext=*)
+        showtext="${i#*=}"
+        # map off to 0 as it's not directly supported by the rest API yet
+        if [[ $showtext == "off" ]]; then showtext="0"; fi
+        shift # past argument=value
+        ;;
+        -f=*|--forecolor=*)
+        forecolor="${i#*=}"
+        shift # past argument=value
+        ;;
+        -b=*|--backcolor=*)
+        backcolor="${i#*=}"
+        shift # past argument=value
+        ;;
+        -r=*|--rotate=*)
+        rotate="${i#*=}"
+        shift # past argument=value
+        ;;
+        --fontname=*)
+        fontname="${i#*=}"
+        shift # past argument=value
+        ;;
+        --fontsize=*)
+        fontsize="${i#*=}"
+        shift # past argument=value
+        ;;
+        --fontbold=*)
+        fontbold="${i#*=}"
+        shift # past argument=value
+        ;;
+        --fontitalic=*)
+        fontitalic="${i#*=}"
+        shift # past argument=value
+        ;;
+        --fontunderline=*)
+        fontunderline="${i#*=}"
+        shift # past argument=value
+        ;;
+        --fontstrikeout=*)
+        fontstrikeout="${i#*=}"
+        shift # past argument=value
+        ;;
+        -H|--help)
+        helpVerbose
+        exit
+        ;;
+        --types|--codes)
+        helpTypes
+        exit
+        ;;
+        *)
+          # unknown option - assume filename
+          if [[ $1 == *"png"* ]]; then
+            filename=$1
+          fi 
+          if [[ $1 == *"jpg"* ]]; then
+            filename=$1
+          fi 
+          shift # past argument=value
+    esac
+done
+
+if [ -z "$filename" ]
+then
+    help 
+else
+    url="https://api.activebarcode.net/v1/png?\
+text=$(rawurlencode "$text")&\
+typeno=$typeno&\
+code=$code&\
+width=$width&\
+height=$height&\
+alignment=$alignment&\
+borderwidth=$borderwidth&\
+borderheight=$borderheight&\
+notchheightinpercent=$notchheight&\
+showtext=$showtext&\
+forecolor=$forecolor&\
+backcolor=$backcolor&\
+rotate=$rotate&\
+fontname=$(rawurlencode "$fontname")&\
+fontsize=$fontsize&\
+fontbold=$fontbold&\
+fontitalic=$fontitalic&\
+fontunderline=$fontunderline&\
+fontstrikeout=$fontstrikeout&\
+access=$access"
+    command="wget --output-documen=$filename \
+--quiet \
+$url"
+    # Debug
+    # echo $command
+    $command
+fi
