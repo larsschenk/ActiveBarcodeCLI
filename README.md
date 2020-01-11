@@ -10,8 +10,8 @@ ActiveBarcodeCLI is a bash file as a wrapper tool for the  ActiveBarcode REST AP
 
 [FILENAME] must use .png or .jpg to determine the image file format.
 
-  --help                      display detailed help  
-  --version                   display the version of ActiveBarcodeCLI and exit  
+  --help  
+  display detailed help  
 
 ### Examples of usage:
 
