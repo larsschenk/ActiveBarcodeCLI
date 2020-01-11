@@ -33,4 +33,4 @@ of the License, or any later version.
 ActiveBarcodeCLI is published on github WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 See the GNU General Public License for more details.
 
-ActiveBarcode &copy; by the ActiveBarcode developers, [www.activebarcode.com](www.activebarcode.com).
+ActiveBarcode and the REST API &copy; by the ActiveBarcode developers, [www.activebarcode.com](www.activebarcode.com).
