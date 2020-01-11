@@ -15,7 +15,7 @@ ActiveBarcodeCLI is a bash file as a wrapper tool for the  ActiveBarcode REST AP
 
 ### Examples of usage:
 
-ActiveBarcodeCLI barcode.jpeg  
+ActiveBarcodeCLI barcode.jpg  
 ActiveBarcodeCLI --text=192837465012 --code=ean13 --width=400 --height=200 ean.png  
 ActiveBarcodeCLI --text='Hello World!' --type=14 --width=500 --height=100 code128.jpg  
 
