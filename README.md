@@ -23,6 +23,14 @@ ActiveBarcodeCLI --text='Hello World!' --type=14 --width=500 --height=100 code12
 For a faster, enhanced, universal powerful but windows only alternative use  
 [ActiveBarcodeCLI.exe](https://www.activebarcode.com/commandline/) &#128640;
 
+### Installation:
+
+Download ActiveBarcodeCLI and make sure it's excecutable (chmod +x).  
+
+Or simply:  
+git clone https://github.com/larsschenk/ActiveBarcodeCLI.git  
+and use it:   
+ActiveBarcodeCLI/ActiveBarcodeCLI --help  
 
 ----
 ActiveBarcodeCLI is free software; you can redistribute it and/or
