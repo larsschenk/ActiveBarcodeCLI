@@ -14,23 +14,32 @@ ActiveBarcodeCLI is a bash script as a wrapper tool for the  ActiveBarcode REST 
   display detailed help  
 
 ### Examples of usage:
-
+```
 ActiveBarcodeCLI barcode.jpg  
 ActiveBarcodeCLI --text=192837465012 --code=ean13 --width=400 --height=200 ean.png  
 ActiveBarcodeCLI --text='Hello World!' --type=14 --width=500 --height=100 code128.jpg  
-
+```
 
 For a faster, enhanced, universal powerful but windows only alternative use  
 [ActiveBarcodeCLI.exe](https://www.activebarcode.com/commandline/) &#128640;
 
 ### Installation:
 
-Download ActiveBarcodeCLI and make sure it's excecutable (chmod +x).  
+With [homebrew](https://brew.sh) 
+```
+brew install schenk/barcode/activebarcodecli  
+```
+
+Without homebrew just download [ActiveBarcodeCLI](https://raw.githubusercontent.com/larsschenk/ActiveBarcodeCLI/master/ActiveBarcodeCLI) and make sure it's excecutable (chmod +x).  
 
 Or simply:  
+```
 git clone https://github.com/larsschenk/ActiveBarcodeCLI.git  
+```
 and use it:   
-ActiveBarcodeCLI/ActiveBarcodeCLI --help  
+```
+ActiveBarcodeCLI --help  
+```
 
 ----
 ActiveBarcodeCLI is free software; you can redistribute it and/or
