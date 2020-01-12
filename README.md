@@ -4,7 +4,7 @@
 
 ActiveBarcodeCLI is open source. You can redistribute and/or modify it under the terms of the GNU GPL.
 
-ActiveBarcodeCLI is a bash script as a wrapper tool for the  ActiveBarcode REST API to easily create highly accurate barcode images at the command line. It can be used to create png and jpg bitmaps. It helps to automate your barcode needs, is versatile in use and platform independent. The only requirement is access to the ActiveBarcode REST API and wget.
+ActiveBarcodeCLI is a bash script as a wrapper tool for the  ActiveBarcode [REST API](https://www.activebarcode.com/rest/) to easily create highly accurate barcode images at the command line. It can be used to create png and jpg bitmaps. It helps to automate your barcode needs, is versatile in use and platform independent. The only requirement is access to the ActiveBarcode REST API and wget.
 
 ### Usage: ActiveBarcodeCLI [OPTION]... [FILENAME]...
 
