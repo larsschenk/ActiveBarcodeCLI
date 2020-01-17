@@ -449,7 +449,7 @@ fontitalic=$fontitalic&\
 fontunderline=$fontunderline&\
 fontstrikeout=$fontstrikeout&\
 access=$access"
-    command="wget --output-documen=$filename \
+    command="wget --output-document=$filename \
 --quiet \
 $url"
     # Debug
